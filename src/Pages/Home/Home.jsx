@@ -6,10 +6,11 @@ export default function IPGeneratorLanding() {
   const [currentDemo, setCurrentDemo] = useState(0);
   const [animatingBg, setAnimatingBg] = useState(0);
   const [generatedData, setGeneratedData] = useState([
-    { value: '', details: false },
-    { value: '', details: false },
-    { value: '', details: false }
+    { value: '', details: false, loading: false },
+    { value: '', details: false, loading: false },
+    { value: '', details: false, loading: false }
   ]);
+
   const { generateEmail, generatePhone, generateIP } = useContext(IPGenContext);
 
   const demoData = [
@@ -32,22 +33,34 @@ export default function IPGeneratorLanding() {
     return () => clearInterval(bgInterval);
   }, []);
 
-  // API-based generators
   const handleGenerate = async (index) => {
-    let value = '';
-    if (demoData[index].type === 'IP') {
-      value = await generateIP();
-    } else if (demoData[index].type === 'Email') {
-      value = await generateEmail();
-    } else if (demoData[index].type === 'Phone') {
-      value = await generatePhone();
-    }
     setGeneratedData((prev) => {
       const newData = [...prev];
-      newData[index].value = value;
-      newData[index].details = false;
+      newData[index] = { ...newData[index], loading: true };
       return newData;
     });
+
+    try {
+      let value = '';
+      if (demoData[index].type === 'IP') {
+        value = await generateIP();
+      } else if (demoData[index].type === 'Email') {
+        value = await generateEmail();
+      } else if (demoData[index].type === 'Phone') {
+        value = await generatePhone();
+      }
+      setGeneratedData((prev) => {
+        const newData = [...prev];
+        newData[index] = { ...newData[index], value, details: false, loading: false };
+        return newData;
+      });
+    } catch (err) {
+      setGeneratedData((prev) => {
+        const newData = [...prev];
+        newData[index] = { ...newData[index], loading: false };
+        return newData;
+      });
+    }
   };
 
   const handleClear = (index) => {
@@ -125,14 +138,14 @@ export default function IPGeneratorLanding() {
       {/* Hero Section */}
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-16 pb-32">
         <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-cyan-200 to-blue-300 bg-clip-text text-transparent leading-tight">
+          <h1 className="font-sans text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-cyan-200 to-blue-300 bg-clip-text text-transparent leading-tight">
             Generate Random
             <br />
-            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+            <span className="font-sans bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
               Tech Data
             </span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+          <p className="font-sans text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
             Professional-grade random IP addresses, emails, and phone numbers for development, testing, and prototyping
           </p>
           {/* Only Documentation button remains */}
@@ -156,6 +169,7 @@ export default function IPGeneratorLanding() {
                 const Icon = demo.icon;
                 const info = generatedData[index].value;
                 const showDetails = generatedData[index].details;
+                const isLoading = generatedData[index].loading;
                 return (
                   <div
                     key={demo.type}
@@ -170,10 +184,17 @@ export default function IPGeneratorLanding() {
                       <Icon className={`w-6 h-6 transition-all duration-300 ${currentDemo === index ? 'text-cyan-400 animate-pulse' : 'text-gray-400'}`} />
                       <span className="font-semibold text-lg">{demo.type}</span>
                     </div>
-                    <div className="flex flex-col items-center justify-center w-full mb-4">
-                      <div className="font-mono text-2xl md:text-3xl bg-black/50 px-6 py-3 rounded text-center w-full">
-                        {info || '--'}
-                      </div>
+                    <div className="flex flex-col items-center justify-center w-full mb-4 relative">
+                      {isLoading ? (
+                        <div className="absolute inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center z-10">
+                          <div className="w-8 h-8 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mb-2" style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}></div>
+                          <div className="text-cyan-400 text-sm font-bold">Generating...</div>
+                        </div>
+                      ) : (
+                        <div className="font-mono text-2xl md:text-3xl bg-black/50 px-6 py-3 rounded text-center w-full">
+                          {info || '--'}
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 relative z-10">
                       <button
@@ -189,10 +210,6 @@ export default function IPGeneratorLanding() {
                         Details
                       </button>
                     </div>
-                    {/* Animated background for active item */}
-                    {currentDemo === index && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/5 via-blue-400/10 to-transparent animate-pulse"></div>
-                    )}
                   </div>
                 );
               })}
@@ -214,7 +231,7 @@ export default function IPGeneratorLanding() {
 
         {/* Features Section */}
         <div id="features" className="mb-24">
-          <h2 className="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+          <h2 className="font-sans text-4xl font-bold text-center mb-16 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
             Powerful Features
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
