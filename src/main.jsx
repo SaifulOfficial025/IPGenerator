@@ -6,9 +6,12 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import { router } from './Routes/router';
+import { IPGenProvider } from './Context/IPGenContext';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <IPGenProvider>
+      <RouterProvider router={router} />
+    </IPGenProvider>
   </StrictMode>,
 )
