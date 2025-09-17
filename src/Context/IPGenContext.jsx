@@ -6,11 +6,14 @@ export const IPGenProvider = ({ children }) => {
   // API integration functions
   const generateEmail = async () => {
     try {
-      const res = await fetch('/api/mail_generate_with_one_click/generate-mail/', {
-        method: 'GET'
+      const res = await fetch('/api/mail-sender/generate-account/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       const data = await res.json();
-      return data.email || '';
+      return data.address || '';
     } catch (err) {
       return '';
     }
@@ -18,8 +21,11 @@ export const IPGenProvider = ({ children }) => {
 
   const generatePhone = async () => {
     try {
-      const res = await fetch('/api/phone_generate_with_one_click/generate-phone/', {
-        method: 'POST'
+      const res = await fetch('/api/phone-solution/purchase-number/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       const data = await res.json();
       return data.phone_number || '';
@@ -30,13 +36,17 @@ export const IPGenProvider = ({ children }) => {
 
   const generateIP = async () => {
     try {
-      const res = await fetch('/api/ip_generate_with_one_click/generate-ip/', {
+      const res = await fetch('/api/ip_generate_with_one_click/generate-ip-and-get-url/', {
         method: 'GET'
       });
       const data = await res.json();
-      return data.ip_address || '';
+      // return both the generated_ip and redirect_url so the caller can use both
+      return {
+        generated_ip: data.generated_ip || '',
+        redirect_url: data.redirect_url || ''
+      };
     } catch (err) {
-      return '';
+      return { generated_ip: '', redirect_url: '' };
     }
   };
 

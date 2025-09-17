@@ -6,9 +6,14 @@ export default function IPGeneratorLanding() {
   const [currentDemo, setCurrentDemo] = useState(0);
   const [animatingBg, setAnimatingBg] = useState(0);
   const [generatedData, setGeneratedData] = useState([
-    { value: '', details: false, loading: false },
-    { value: '', details: false, loading: false },
-    { value: '', details: false, loading: false }
+    { value: '', details: false, loading: false, redirect: '' },
+    { value: '', details: false, loading: false, redirect: '' },
+    { value: '', details: false, loading: false, redirect: '' }
+  ]);
+  const [copyStatus, setCopyStatus] = useState([
+    { value: '', redirect: '' },
+    { value: '', redirect: '' },
+    { value: '', redirect: '' }
   ]);
 
   const { generateEmail, generatePhone, generateIP } = useContext(IPGenContext);
@@ -43,7 +48,15 @@ export default function IPGeneratorLanding() {
     try {
       let value = '';
       if (demoData[index].type === 'IP') {
-        value = await generateIP();
+        const ipResult = await generateIP();
+        // ipResult contains { generated_ip, redirect_url }
+        value = ipResult.generated_ip || '';
+        setGeneratedData((prev) => {
+          const newData = [...prev];
+          newData[index] = { ...newData[index], value, details: false, loading: false, redirect: ipResult.redirect_url || '' };
+          return newData;
+        });
+        return;
       } else if (demoData[index].type === 'Email') {
         value = await generateEmail();
       } else if (demoData[index].type === 'Phone') {
@@ -68,6 +81,7 @@ export default function IPGeneratorLanding() {
       const newData = [...prev];
       newData[index].value = '';
       newData[index].details = false;
+      newData[index].redirect = '';
       return newData;
     });
   };
@@ -78,6 +92,50 @@ export default function IPGeneratorLanding() {
       newData[index].details = !newData[index].details;
       return newData;
     });
+  };
+
+  // Robust copy helper with fallback and visual feedback per-item
+  const copyToClipboard = async (text, idx, field = 'value') => {
+    if (!text) return;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      setCopyStatus((prev) => {
+        const next = prev.map((p) => ({ ...p }));
+        next[idx][field] = 'Copied!';
+        return next;
+      });
+      setTimeout(() => {
+        setCopyStatus((prev) => {
+          const next = prev.map((p) => ({ ...p }));
+          next[idx][field] = '';
+          return next;
+        });
+      }, 1500);
+    } catch (err) {
+      // ignore, optionally show error
+      setCopyStatus((prev) => {
+        const next = prev.map((p) => ({ ...p }));
+        next[idx][field] = 'Error';
+        return next;
+      });
+      setTimeout(() => {
+        setCopyStatus((prev) => {
+          const next = prev.map((p) => ({ ...p }));
+          next[idx][field] = '';
+          return next;
+        });
+      }, 1500);
+    }
   };
 
   return (
@@ -191,11 +249,51 @@ export default function IPGeneratorLanding() {
                           <div className="text-cyan-400 text-sm font-bold">Generating...</div>
                         </div>
                       ) : (
-                        <div className="font-mono text-2xl md:text-3xl bg-black/50 px-6 py-3 rounded text-center w-full">
-                          {info || '--'}
+                        <div className="font-mono text-base md:text-2xl bg-black/50 px-4 py-3 rounded text-left w-full flex items-center gap-4">
+                          {demo.type === 'Email' ? (
+                            <div className="min-w-0 break-words whitespace-normal text-cyan-100" title={info || ''}>
+                              {info || '--'}
+                            </div>
+                          ) : (
+                            <div className="min-w-0 truncate md:max-w-[70%] break-words text-cyan-100" title={info || ''}>{info || '--'}</div>
+                          )}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <button
+                              type="button"
+                              className="px-3 py-1 bg-cyan-500/20 text-cyan-300 rounded text-sm hover:bg-cyan-500/30"
+                              onClick={(e) => { e.stopPropagation(); copyToClipboard(info, index, 'value'); }}
+                            >
+                              {copyStatus[index].value || 'Copy'}
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
+                    {/* If this is the IP demo, show redirect_url box below */}
+                    {demo.type === 'IP' && generatedData[index].redirect ? (
+                      <div className="mt-3 w-full">
+                        <div className="text-xs text-gray-400 mb-2">Redirect URL</div>
+                        <div className="flex items-center bg-black/40 px-4 py-2 rounded gap-4">
+                          <div className="min-w-0 break-words text-sm text-cyan-200 max-w-[70%]">{generatedData[index].redirect}</div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <button
+                              type="button"
+                              className="px-3 py-1 bg-cyan-500/20 text-cyan-300 rounded text-sm hover:bg-cyan-500/30"
+                              onClick={(e) => { e.stopPropagation(); window.open(generatedData[index].redirect, '_blank'); }}
+                            >
+                              Open
+                            </button>
+                            <button
+                              type="button"
+                              className="px-3 py-1 bg-cyan-500/20 text-cyan-300 rounded text-sm hover:bg-cyan-500/30"
+                              onClick={(e) => { e.stopPropagation(); copyToClipboard(generatedData[index].redirect, index, 'redirect'); }}
+                            >
+                              {copyStatus[index].redirect || 'Copy'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
                     <div className="flex items-center gap-3 relative z-10">
                       <button
                         className={`px-4 py-2 rounded bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-semibold text-sm transition-all duration-300 hover:from-cyan-400 hover:to-blue-500 ${info ? 'bg-gradient-to-r from-red-400 to-red-600 text-white' : ''}`}
