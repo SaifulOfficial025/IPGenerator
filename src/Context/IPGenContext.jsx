@@ -10,7 +10,8 @@ export const IPGenProvider = ({ children }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        cache: 'no-store'
       });
       const data = await res.json();
       return data.address || '';
@@ -25,7 +26,8 @@ export const IPGenProvider = ({ children }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        cache: 'no-store'
       });
       const data = await res.json();
       return data.phone_number || '';
@@ -36,8 +38,11 @@ export const IPGenProvider = ({ children }) => {
 
   const generateIP = async () => {
     try {
-      const res = await fetch('/api/ip_generate_with_one_click/generate-ip-and-get-url/', {
-        method: 'GET'
+      // add a cache-buster query param and explicitly disable cache
+      const url = `/api/ip_generate_with_one_click/generate-ip-and-get-url/?_=${Date.now()}`;
+      const res = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store'
       });
       const data = await res.json();
       // return both the generated_ip and redirect_url so the caller can use both
@@ -56,6 +61,8 @@ export const IPGenProvider = ({ children }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone_number })
+      ,
+        cache: 'no-store'
       });
       const data = await res.json();
       // API may return either { status, message } or { error: '...' }
