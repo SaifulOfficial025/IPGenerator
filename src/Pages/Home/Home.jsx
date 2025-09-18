@@ -17,12 +17,19 @@ export default function IPGeneratorLanding() {
   ]);
 
   const { generateEmail, generatePhone, generateIP } = useContext(IPGenContext);
+  const { useOtp } = useContext(IPGenContext);
 
   const demoData = [
     { type: 'IP', icon: Monitor },
     { type: 'Email', icon: Mail },
     { type: 'Phone', icon: Phone }
   ];
+
+  // OTP box state
+  const [otpPhone, setOtpPhone] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpMessage, setOtpMessage] = useState('');
+  const [otpStatus, setOtpStatus] = useState('');
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -311,6 +318,44 @@ export default function IPGeneratorLanding() {
                   </div>
                 );
               })}
+              {/* OTP Use Box */}
+              <div className="flex flex-col items-center justify-center p-4 rounded-xl border bg-gray-800/50 transition-all duration-500">
+                <div className="flex items-center space-x-3 mb-4">
+                  <Phone className="w-6 h-6 text-gray-400" />
+                  <span className="font-semibold text-lg">Use OTP</span>
+                </div>
+                <div className="w-full mb-3">
+                  <input
+                    type="text"
+                    placeholder="+447723456789"
+                    className="w-full bg-black/40 px-4 py-2 rounded text-sm text-white"
+                    value={otpPhone}
+                    onChange={(e) => setOtpPhone(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    disabled={!otpPhone || otpLoading}
+                    className={`px-4 py-2 rounded text-black font-semibold text-sm ${!otpPhone || otpLoading ? 'bg-gray-600/40 cursor-not-allowed' : 'bg-gradient-to-r from-cyan-500 to-blue-600'}`}
+                    onClick={async () => {
+                      if (!otpPhone) return;
+                      setOtpLoading(true);
+                      setOtpMessage('');
+                      setOtpStatus('');
+                      const res = await useOtp(otpPhone);
+                      setOtpLoading(false);
+                      setOtpMessage(res.message || 'No response');
+                      setOtpStatus(res.status || (res.message ? 'success' : 'error'));
+                    }}
+                  >
+                    {otpLoading ? 'Submitting...' : 'Submit'}
+                  </button>
+                </div>
+                {otpMessage ? (
+                  <div className={`mt-3 text-sm ${otpStatus === 'error' ? 'text-red-400' : 'text-cyan-200'}`}>{otpMessage}</div>
+                ) : null}
+              </div>
             </div>
             {/* Interactive progress indicators */}
             <div className="flex justify-center mt-6 space-x-2">

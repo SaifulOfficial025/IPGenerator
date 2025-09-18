@@ -50,8 +50,26 @@ export const IPGenProvider = ({ children }) => {
     }
   };
 
+  const useOtp = async (phone_number) => {
+    try {
+      const res = await fetch('/api/phone-solution/use-otp/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone_number })
+      });
+      const data = await res.json();
+      // API may return either { status, message } or { error: '...' }
+      if (data.error) {
+        return { status: 'error', message: data.error };
+      }
+      return { status: data.status || 'success', message: data.message || '' };
+    } catch (err) {
+      return { status: 'error', message: 'Network error' };
+    }
+  };
+
   return (
-    <IPGenContext.Provider value={{ generateEmail, generatePhone, generateIP }}>
+    <IPGenContext.Provider value={{ generateEmail, generatePhone, generateIP, useOtp }}>
       {children}
     </IPGenContext.Provider>
   );

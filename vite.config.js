@@ -8,7 +8,7 @@ export default defineConfig({
     port: 6969, // Moved port to the server level
     proxy: {
       '/api': {
-        target: 'http://10.10.13.99:8888',
+        target: 'https://ethan-project.duckdns.org/',
         changeOrigin: true, // Enable to handle CORS by changing the origin
         secure: false, // Disable SSL verification for ngrok
         ws: false // Disable WebSocket proxying if not needed
