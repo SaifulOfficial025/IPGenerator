@@ -3,10 +3,13 @@ import React, { createContext, useContext } from 'react';
 export const IPGenContext = createContext();
 
 export const IPGenProvider = ({ children }) => {
+  // Use environment variable for API base URL so we can point to different backends
+  // in dev (proxy) and production (actual backend domain).
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
   // API integration functions
   const generateEmail = async () => {
     try {
-      const res = await fetch('/api/mail-sender/generate-account/', {
+      const res = await fetch(`${API_BASE_URL}/mail-sender/generate-account/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -22,7 +25,7 @@ export const IPGenProvider = ({ children }) => {
 
   const generatePhone = async () => {
     try {
-      const res = await fetch('/api/phone-solution/purchase-number/', {
+      const res = await fetch(`${API_BASE_URL}/phone-solution/purchase-number/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -39,7 +42,7 @@ export const IPGenProvider = ({ children }) => {
   const generateIP = async () => {
     try {
       // add a cache-buster query param and explicitly disable cache
-      const url = `/api/ip_generate_with_one_click/generate-ip-and-get-url/?_=${Date.now()}`;
+      const url = `${API_BASE_URL}/ip_generate_with_one_click/generate-ip-and-get-url/?_=${Date.now()}`;
       const res = await fetch(url, {
         method: 'GET',
         cache: 'no-store'
@@ -57,7 +60,7 @@ export const IPGenProvider = ({ children }) => {
 
   const useOtp = async (phone_number) => {
     try {
-      const res = await fetch('/api/phone-solution/use-otp/', {
+      const res = await fetch(`${API_BASE_URL}/phone-solution/use-otp/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone_number })
